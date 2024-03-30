@@ -1,25 +1,16 @@
-// import { getAuth } from "firebase/auth";
-import { useEffect, useState } from "react"
+import { getAuth } from "firebase/auth";
+import { useState } from "react"
 import { Button, Modal } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
-import useLocalStorage from "use-local-storage";
 
 
 export default function LogoutModal() {
+    const auth = getAuth();
     const [show, setShow] = useState(false);
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
-    const [authToken, setAuthToken] = useLocalStorage("authToken", "");
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        if (!authToken) {
-            navigate("/login");
-        }
-    }, [authToken, navigate]);
 
     const handleLogout = () => {
-        setAuthToken("");
+        auth.signOut();
     };
 
     return (

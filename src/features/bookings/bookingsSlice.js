@@ -1,36 +1,109 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-
-const BASE_URL =
-    "https://29197e44-3dea-4ae8-b0c1-36216e013e5b-00-3nlshro0xklic.janeway.repl.co";
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 // Async thunk for fetching a user's bookings
 export const fetchBookingsByUser = createAsyncThunk(
     "bookings/fetchBookingsByUser",
     async (userId) => {
-        const response = await fetch(`${BASE_URL}/bookings/user/${userId}`);
-        return response.json();
+        try {
+            const bookingsRef = collection(db, `users/${userId}/bookings`);
+
+            const querySnapshot = await getDocs(bookingsRef);
+            const docs = querySnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+
+            return docs;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
     }
 );
 
 // Async thunk to add booking
 export const saveBooking = createAsyncThunk(
     "bookings/saveBooking",
-    async ({ bookingDate, bookingTime, bookingGuest }) => {
-        const token = localStorage.getItem("authToken");
-        const decode = jwtDecode(token);
-        const userId = decode.id;
+    async ({ userId, bookingName, bookingDate, bookingTime, bookingPhone, bookingGuest, bookingDeposit, bookingPayment }) => {
+        try {
+            const bookingsRef = collection(db, `users/${userId}/bookings`);
+            const newBookingRef = doc(bookingsRef);
+            console.log({ bookingName, bookingDate, bookingTime, bookingPhone, bookingGuest, bookingDeposit, bookingPayment });
+            await setDoc(newBookingRef, { name: bookingName, date: bookingDate, time: bookingTime, phone_number: bookingPhone, guest: bookingGuest, deposit: bookingDeposit, payment: bookingPayment });
+            const newBooking = await getDoc(newBookingRef);
 
-        const data = {
-            date: bookingDate,
-            time: bookingTime,
-            guest: bookingGuest,
-            user_id: userId,
-        };
+            const booking = {
+                id: newBooking.id,
+                ...newBooking.data(),
+            };
 
-        const response = await axios.post(`${BASE_URL}/bookings`, data);
-        return response.data;
+            return booking;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+);
+
+// Async thunk to update booking
+export const updateBooking = createAsyncThunk(
+    "bookings/updateBooking",
+    async ({ userId, bookingId, newBookingName, newBookingDate, newBookingTime, newBookingPhone, newBookingGuest, newBookingPayment }) => {
+        try {
+            // Reference to the existing post
+            const bookingRef = doc(db, `users/${userId}/bookings/${bookingId}`);
+
+            // Get the current booking data
+            const bookingSnap = await getDoc(bookingRef);
+            if (bookingSnap.exists()) {
+                const bookingData = bookingSnap.data();
+
+                // Update the booking data
+                const updatedData = {
+                    ...bookingData,
+                    name: newBookingName || bookingData.name,
+                    date: newBookingDate || bookingData.date,
+                    time: newBookingTime || bookingData.time,
+                    phone_number: newBookingPhone || bookingData.phone_number,
+                    guest: newBookingGuest || bookingData.guest,
+                    payment: newBookingPayment || bookingData.payment,
+                };
+
+                // Update the existing document in Firestore
+                await updateDoc(bookingRef, updatedData);
+
+                // Return the post with updated data
+                const updatedBooking = { id: bookingId, ...updatedData };
+                return updatedBooking;
+            } else {
+                throw new Error("Booking does not exist");
+            }
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    }
+);
+
+// Async thunk to delete booking
+export const deleteBooking = createAsyncThunk(
+    "bookings/deleteBooking",
+    async ({ userId, bookingId }) => {
+        try {
+            // Reference to the post
+            const bookingRef = doc(db, `users/${userId}/bookings/${bookingId}`);
+
+            // Delete the booking
+            await deleteDoc(bookingRef);
+
+            // Return the ID of the deleted booking
+            return bookingId;
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
     }
 );
 
@@ -39,14 +112,29 @@ export const saveBooking = createAsyncThunk(
 const bookingsSlice = createSlice({
     name: "bookings",
     initialState: { bookings: [], loading: true },
-    reducers: {},
     extraReducers: (builder) => {
-        builder.addCase(fetchBookingsByUser.fulfilled, (state, action) => {
-            state.bookings = action.payload;
-            state.loading = false;
-        }),
-            builder.addCase(saveBooking.fulfilled, (state, action) => {
+        builder
+            .addCase(fetchBookingsByUser.fulfilled, (state, action) => {
+                state.bookings = action.payload;
+                state.loading = false;
+            })
+            .addCase(saveBooking.fulfilled, (state, action) => {
                 state.bookings = [action.payload, ...state.bookings];
+            })
+            .addCase(updateBooking.fulfilled, (state, action) => {
+                const updatedBooking = action.payload;
+                // Find and update the booking in the state
+                const bookingIndex = state.bookings.findIndex(
+                    (booking) => booking.id === updatedBooking.id
+                );
+                if (bookingIndex !== -1) {
+                    state.bookings[bookingIndex] = updatedBooking;
+                }
+            })
+            .addCase(deleteBooking.fulfilled, (state, action) => {
+                const deletedBookingId = action.payload;
+                // Filter out the deleted booking from state
+                state.bookings = state.bookings.filter((booking) => booking.id !== deletedBookingId);
             });
     },
 });

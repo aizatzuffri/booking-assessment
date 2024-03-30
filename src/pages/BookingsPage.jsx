@@ -1,36 +1,28 @@
 import { Container, Spinner } from "react-bootstrap";
-
 import Layout from "../components/Layout";
 import ProfileBookingCard from "../components/ProfileBookingCard";
-import { useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
+import { useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBookingsByUser } from "../features/bookings/bookingsSlice";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../components/AuthProvider";
 
 export default function BookingsPage() {
-    // const [bookings, setBookings] = useState([]);
+    const navigate = useNavigate();
     const dispatch = useDispatch();
+    const { currentUser } = useContext(AuthContext);
+
     const bookings = useSelector((state) => state.bookings.bookings);
     const loading = useSelector((state) => state.bookings.loading);
 
-    // Fetch bookings based on user id
-    // const fetchBookings = (userId) => {
-    //     fetch(
-    //         `https://29197e44-3dea-4ae8-b0c1-36216e013e5b-00-3nlshro0xklic.janeway.repl.co/bookings/user/${userId}`
-    //     )
-    //         .then((response) => response.json())
-    //         .then((data) => setBookings(data))
-    //         .catch((error) => console.error("Error:", error));
-    // };
+    // Check if currentuser is logged in
+    if (!currentUser) {
+        navigate("/login");
+    }
 
     useEffect(() => {
-        const token = localStorage.getItem("authToken");
-        if (token) {
-            const decodedToken = jwtDecode(token);
-            const userId = decodedToken.id;
-            dispatch(fetchBookingsByUser(userId));
-        }
-    }, [dispatch]);
+        dispatch(fetchBookingsByUser(currentUser.uid));
+    }, [dispatch, currentUser]);
 
 
     return (
@@ -44,9 +36,7 @@ export default function BookingsPage() {
                 {bookings.length > 0 && bookings.map((booking) => (
                     <ProfileBookingCard
                         key={booking.id}
-                        date={booking.date}
-                        time={booking.time}
-                        guest={booking.guest}
+                        booking={booking}
                     />
                 ))}
             </Container>
