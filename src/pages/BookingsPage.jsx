@@ -33,12 +33,13 @@ export default function BookingsPage() {
                 {loading && (
                     <Spinner animation="border" className="ms-3 mt-3" variant="primary" />
                 )}
-                {bookings.length > 0 && bookings.map((booking) => (
+                {bookings.length > 0 && bookings.map((booking, index) => (
                     <ProfileBookingCard
-                        key={booking.id}
+                        key={booking.id + index} // Use a combination of booking ID and index for uniqueness
                         booking={booking}
                     />
                 ))}
+
             </Container>
         </>
     );

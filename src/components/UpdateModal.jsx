@@ -56,19 +56,19 @@ export default function UpdateModal({
                         </Form.Group>
                         <br />
                         <Form.Group controlId="bookingDate">
-                            <Form.Label>Date: DD-MM-YYYY</Form.Label>
+                            <Form.Label>Date:</Form.Label>
                             <Form.Control
                                 defaultValue={originalBookingDate}
-                                type="text"
+                                type="date"
                                 onChange={(e) => setNewBookingDate(e.target.value)}
                             />
                         </Form.Group>
                         <br />
                         <Form.Group controlId="bookingTime">
-                            <Form.Label>Time: HH:MM</Form.Label>
+                            <Form.Label>Time:</Form.Label>
                             <Form.Control
                                 defaultValue={originalBookingTime}
-                                type="text"
+                                type="time"
                                 onChange={(e) => setNewBookingTime(e.target.value)}
                             />
                         </Form.Group>
@@ -79,8 +79,12 @@ export default function UpdateModal({
                                 <InputGroup.Text>+60</InputGroup.Text>
                                 <Form.Control
                                     defaultValue={originalBookingPhone}
-                                    type="number"
-                                    onChange={(e) => setNewBookingPhone(e.target.value)}
+                                    type="text"
+                                    maxLength={10}
+                                    onChange={(e) => {
+                                        const input = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+                                        setNewBookingPhone(input)
+                                    }}
                                 />
                             </InputGroup>
                         </Form.Group>
@@ -98,10 +102,10 @@ export default function UpdateModal({
                             <Form.Label>Payment Method:</Form.Label>
                             <Form.Control as="select" type="text" defaultValue={originalBookingPayment} onChange={(e) => setNewBookingPayment(e.target.value)}>
                                 <option value="">Select Payment Method</option>
-                                <option value="credit_card">Credit Card</option>
-                                <option value="debit_card">Debit Card</option>
-                                <option value="paypal">PayPal</option>
-                                <option value="cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Debit Card">Debit Card</option>
+                                <option value="PayPal">PayPal</option>
+                                <option value="Cash">Cash</option>
                             </Form.Control>
                         </Form.Group>
                         <br />

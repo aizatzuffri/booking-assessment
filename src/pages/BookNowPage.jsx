@@ -15,7 +15,7 @@ export default function BookNowPage() {
     const [bookingTime, setBookingTime] = useState("");
     const [bookingPhone, setBookingPhone] = useState("");
     const [bookingGuest, setBookingGuest] = useState("");
-    const bookingDeposit = 50;
+    const bookingDeposit = 300;
     const [bookingPayment, setBookingPayment] = useState("");
 
     const dispatch = useDispatch();
@@ -51,19 +51,19 @@ export default function BookNowPage() {
                     </Form.Group>
                     <br />
                     <Form.Group controlId="bookingDate">
-                        <Form.Label>Date: DD-MM-YYYY</Form.Label>
+                        <Form.Label>Date:</Form.Label>
                         <Form.Control
                             placeholder="Put in your desired date"
-                            type="text"
+                            type="date"
                             onChange={(e) => setBookingDate(e.target.value)}
                         />
                     </Form.Group>
                     <br />
                     <Form.Group controlId="bookingTime">
-                        <Form.Label>Time: HH:MM</Form.Label>
+                        <Form.Label>Time:</Form.Label>
                         <Form.Control
                             placeholder="Put in your desired time"
-                            type="text"
+                            type="time"
                             onChange={(e) => setBookingTime(e.target.value)}
                         />
                     </Form.Group>
@@ -74,8 +74,13 @@ export default function BookNowPage() {
                             <InputGroup.Text>+60</InputGroup.Text>
                             <Form.Control
                                 placeholder="Enter a phone number"
-                                type="number"
-                                onChange={(e) => setBookingPhone(e.target.value)}
+                                type="text"
+                                value={bookingPhone}
+                                maxLength={10}
+                                onChange={(e) => {
+                                    const input = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+                                    setBookingPhone(input);
+                                }}
                             />
                         </InputGroup>
                     </Form.Group>
@@ -91,17 +96,17 @@ export default function BookNowPage() {
                     <br />
                     <Form.Group controlId="bookingDeposit">
                         <Form.Label>Deposit:</Form.Label>
-                        <Form.Control type="text" value={`$${bookingDeposit}`} disabled />
+                        <Form.Control type="text" value={`$${bookingDeposit}`} readOnly />
                     </Form.Group>
                     <br />
                     <Form.Group controlId="bookingPayment">
                         <Form.Label>Payment Method:</Form.Label>
                         <Form.Control as="select" type="text" value={bookingPayment} onChange={(e) => setBookingPayment(e.target.value)}>
                             <option value="">Select Payment Method</option>
-                            <option value="credit_card">Credit Card</option>
-                            <option value="debit_card">Debit Card</option>
-                            <option value="paypal">PayPal</option>
-                            <option value="cash">Cash</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="Cash">Cash</option>
                         </Form.Control>
                     </Form.Group>
                     <br />
